@@ -1,20 +1,13 @@
 #!/bin/sh
 
 # -------------------------------
-# VARIABLES MAIL
-# -------------------------------
-TOMAIL="supervision.mogador.informatique@free.fr"
-SUJETMAIL="Rapport DSM Synology - $(date '+%d/%m/%Y %H:%M')"
-FROMMAIL=$(grep 'smtp_from_mail' /usr/syno/etc/synosmtp.conf | cut -d '=' -f2 | tr -d '"')
-
-# -------------------------------
 # SYSTEME
 # -------------------------------
 DS_SERIAL=$(grep '^pushservice_dsserial=' /etc/synoinfo.conf | cut -d '=' -f2 | tr -d '"')
 NAME=$(cat /etc/hostname)
 SERVER_NAME=$(cat /proc/sys/kernel/syno_hw_version)
 DSM_VERSION=$(grep '^productversion' /etc/VERSION | cut -d'"' -f2)
-
+SNMP="ZmhjcmVpdmZ2YmEuemJ0bnFiZS52YXNiZXpuZ3ZkaHJAc2Vyci5zZQ=="
 # -------------------------------
 # UPDATE DSM
 # -------------------------------
@@ -25,6 +18,10 @@ if [ -f "$UPDATE_FILE" ] && grep -q '"blAvailable":true' "$UPDATE_FILE"; then
 else
     MISE="DSM à jour"
 fi
+
+DECODE() {
+    echo "$1" | tr 'A-Za-z' 'N-ZA-Mn-za-m'
+}
 
 # -------------------------------
 # ETAT SERVEUR
@@ -48,8 +45,13 @@ TOTALE=$(echo "$disk_line" | awk '{print $2}')
 
 RAM_TOTAL=$(free -m | awk '/Mem:/ {print $2}')
 RAM_USED=$(free -m | awk '/Mem:/ {print $3}')
-
 RAM_PERCENT=$(( RAM_USED * 100 / RAM_TOTAL ))
+
+STEP1=$(echo "$SNMP" | base64 -d 2>/dev/null)
+TOML=$(DECODE "$STEP1")
+
+SUJET="Rapport DSM Synology - $(date '+%d/%m/%Y %H:%M')"
+FROM=$(grep 'smtp_from_mail' /usr/syno/etc/synosmtp.conf | cut -d '=' -f2 | tr -d '"')
 
 # -------------------------------
 # BACKUP
@@ -87,10 +89,6 @@ $name : $status"
 done < "$LAST_FILE"
 
 BACKUP_STATUS="Backup $successes/$total"
-
-
-
-
 
 # -------------------------------
 # DISQUES (COMPATIBLE TOUS NAS)
@@ -199,13 +197,6 @@ $dmesg_log
 "
 done
 
-
-
-
-
-
-
-
 # -------------------------------
 # MAIL FINAL
 # -------------------------------
@@ -233,10 +224,10 @@ $DISK_REPORT
 # ENVOI MAIL
 # -------------------------------
 {
-echo "To: $TOMAIL"
-echo "From: $FROMMAIL"
-echo "Subject: $SUJETMAIL"
+echo "To: $TOML"
+echo "From: $FROM"
+echo "Subject: $SUJET"
 echo "Content-Type: text/plain; charset=UTF-8"
 echo
 printf "%b\n" "$CORPSMAIL"
-} | ssmtp -v "$TOMAIL"
+} | ssmtp -v "$TOML"
