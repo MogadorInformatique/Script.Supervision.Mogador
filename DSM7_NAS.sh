@@ -8,6 +8,7 @@ NAME=$(cat /etc/hostname)
 SERVER_NAME=$(cat /proc/sys/kernel/syno_hw_version)
 DSM_VERSION=$(grep '^productversion' /etc/VERSION | cut -d'"' -f2)
 SNMP="ZmhjcmVpdmZ2YmEuemJ0bnFiZS52YXNiZXpuZ3ZkaHJAc2Vyci5zZQ=="
+
 # -------------------------------
 # UPDATE DSM
 # -------------------------------
@@ -91,7 +92,7 @@ done < "$LAST_FILE"
 BACKUP_STATUS="Backup $successes/$total"
 
 # -------------------------------
-# DISQUES (COMPATIBLE TOUS NAS)
+# DISQUES
 # -------------------------------
 DISK_REPORT=""
 
@@ -105,9 +106,6 @@ for d in $(awk '$4 ~ /^(sd[a-z]+|sata[0-9]+)$/ {print "/dev/"$4}' /proc/partitio
     temp=""
     smart=""
 
-    # -------------------------------
-    # CAS DISQUE SATA (Synology récent)
-    # -------------------------------
     if echo "$d" | grep -q "sata"; then
 
         syno_info=$(synodisk --info "$d" 2>/dev/null)
@@ -116,37 +114,28 @@ for d in $(awk '$4 ~ /^(sd[a-z]+|sata[0-9]+)$/ {print "/dev/"$4}' /proc/partitio
         cap=$(echo "$syno_info" | awk -F': ' '/Total capacity/ {print $2}')
         temp=$(echo "$syno_info" | awk -F': ' '/Tempeture/ {print $2}')
 
-        # correction valeur invalide
         [ "$temp" = "-1.00 C" ] && temp="N/A"
-
-        # SMART pour erreurs
         smart=$(smartctl -a "$d" 2>/dev/null)
 
     else
-        # -------------------------------
-        # CAS DISQUE SD (anciens NAS)
-        # -------------------------------
+
         smart=$(smartctl -a "$d" 2>/dev/null)
 
         if [ -z "$smart" ]; then
             smart=$(smartctl -a -d sat "$d" 2>/dev/null)
         fi
 
-        # modèle (multi-format)
         model=$(echo "$smart" | awk -F: '
         /Device Model/ {print $2}
         /Product/ {print $2}
         /Model Number/ {print $2}
         ' | head -n1 | sed 's/^ *//')
 
-        # fallback synology
         [ -z "$model" ] && model=$(synodisk --info "$d" 2>/dev/null | awk -F': ' '/Disk model/ {print $2}')
 
-        # capacité
         cap=$(echo "$smart" | awk -F: '/User Capacity/ {print $2}')
         [ -z "$cap" ] && cap=$(synodisk --info "$d" 2>/dev/null | awk -F': ' '/Total capacity/ {print $2}')
 
-        # température (multi-format)
         temp=$(echo "$smart" | awk '
         /Temperature_Celsius/ {print $10}
         /Temperature:/ {print $2}
@@ -155,9 +144,6 @@ for d in $(awk '$4 ~ /^(sd[a-z]+|sata[0-9]+)$/ {print "/dev/"$4}' /proc/partitio
         [ -z "$temp" ] && temp=$(synodisk --info "$d" 2>/dev/null | awk -F': ' '/Tempeture/ {print $2}')
     fi
 
-    # -------------------------------
-    # SMART (commun)
-    # -------------------------------
     reallocated=$(echo "$smart" | awk '/Reallocated_Sector_Ct/ {print $10}')
     pending=$(echo "$smart" | awk '/Current_Pending_Sector/ {print $10}')
     offline=$(echo "$smart" | awk '/Offline_Uncorrectable/ {print $10}')
@@ -220,14 +206,49 @@ $details
 ETAT DES DISQUES
 $DISK_REPORT
 "
+
+# -------------------------------
+# PIECE JOINTE
+# -------------------------------
+ARCHIVE="/tmp/sareport.tar.gz"
+
+if [ -d "/volume1/RapportConseilDeSécurité/rapport/sareport" ]; then
+    tar -czf "$ARCHIVE" -C /volume1/RapportConseilDeSécurité/rapport sareport
+fi
+
 # -------------------------------
 # ENVOI MAIL
 # -------------------------------
+BOUNDARY="=====BOUNDARY_$(date +%s)====="
+
 {
 echo "To: $TOML"
 echo "From: $FROM"
 echo "Subject: $SUJET"
+echo "MIME-Version: 1.0"
+echo "Content-Type: multipart/mixed; boundary=\"$BOUNDARY\""
+echo
+
+echo "--$BOUNDARY"
 echo "Content-Type: text/plain; charset=UTF-8"
 echo
 printf "%b\n" "$CORPSMAIL"
+echo
+
+if [ -f "$ARCHIVE" ]; then
+    filename=$(basename "$ARCHIVE")
+
+    echo "--$BOUNDARY"
+    echo "Content-Type: application/gzip; name=\"$filename\""
+    echo "Content-Transfer-Encoding: base64"
+    echo "Content-Disposition: attachment; filename=\"$filename\""
+    echo
+    base64 "$ARCHIVE"
+    echo
+fi
+
+echo "--$BOUNDARY--"
+
 } | ssmtp -v "$TOML"
+
+rm -f "$ARCHIVE"
