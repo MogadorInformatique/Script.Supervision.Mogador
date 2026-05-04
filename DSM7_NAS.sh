@@ -144,6 +144,12 @@ for d in $(awk '$4 ~ /^(sd[a-z]+|sata[0-9]+)$/ {print "/dev/"$4}' /proc/partitio
         [ -z "$temp" ] && temp=$(synodisk --info "$d" 2>/dev/null | awk -F': ' '/Tempeture/ {print $2}')
     fi
 
+    power_on_hours=$(synodisk --smart_info_get "$d" 2>/dev/null | awk '
+        /Id: 9$/ { found=1 }
+        found && /Raw:/ { print $2; found=0 }
+    ')
+    [ -z "$power_on_hours" ] && power_on_hours="N/A"
+
     reallocated=$(echo "$smart" | awk '/Reallocated_Sector_Ct/ {print $10}')
     pending=$(echo "$smart" | awk '/Current_Pending_Sector/ {print $10}')
     offline=$(echo "$smart" | awk '/Offline_Uncorrectable/ {print $10}')
@@ -168,6 +174,7 @@ Disque    : $d
 Modèle    : $model
 Capacité  : $cap
 Temp      : $temp
+Allumage  : $power_on_hours h
 
 Reallocated: $reallocated
 Pending    : $pending
