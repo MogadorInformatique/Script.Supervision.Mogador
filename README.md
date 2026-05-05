@@ -1,10 +1,10 @@
-**Commande a ajouter dans la tâche supervision**
+***Commande a ajouter dans la tâche supervision***
 ```bash
 #!/bin/bash
 curl -sSfL https://raw.githubusercontent.com/MogadorInformatique/Script.Supervision.Mogador/main/DSM7_NAS.sh | bash
 ```
 
-**Voire les logs du disque en question depuis le boot**
+***Voire les logs du disque en question depuis le boot***
 ```bash
 dmesg -T | grep -i sdq
 ```
@@ -17,9 +17,9 @@ dmesg -T | grep -i "error\|fail\|critical\|I/O\|sdq"
 
 
 
-***Glossaire des erreurs***
+##Glossaire des erreurs##
 
-## Erreurs matérielles disque (critiques)
+***Erreurs matérielles disque (critiques)***
 - `I/O error, dev sdq, sector 2928550848`
 - `Unhandled error code`
 - `Result: hostbyte=0x05`
@@ -30,7 +30,7 @@ dmesg -T | grep -i "error\|fail\|critical\|I/O\|sdq"
 
 ---
 
-## Problème de communication SATA
+***Problème de communication SATA***
 - `ata6: failed to resume link (SControl 4)`
 
 - Perte ou instabilité du lien avec le disque  
@@ -40,7 +40,7 @@ dmesg -T | grep -i "error\|fail\|critical\|I/O\|sdq"
 
 ---
 
-## Corruption du système de fichiers (EXT4)
+***Corruption du système de fichiers (EXT4)***
 - `EXT4-fs (sdq1): error loading journal`
 
 - Journal EXT4 illisible  
@@ -49,7 +49,7 @@ dmesg -T | grep -i "error\|fail\|critical\|I/O\|sdq"
 
 ---
 
-## Échec du journal (JBD2)
+***Échec du journal (JBD2)***
 - `JBD2: IO error -5 recovering block`
 - `JBD2: recovery failed`
 
@@ -59,7 +59,7 @@ dmesg -T | grep -i "error\|fail\|critical\|I/O\|sdq"
 
 ---
 
-## Erreurs de montage (secondaires)
+***Erreurs de montage (secondaires)***
 - `EXT3-fs (md0): error: couldn't mount because of unsupported optional features`
 - `EXT2-fs (md0): error: couldn't mount because of unsupported optional features`
 
