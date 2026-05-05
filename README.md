@@ -4,12 +4,16 @@
 curl -sSfL https://raw.githubusercontent.com/MogadorInformatique/Script.Supervision.Mogador/main/DSM7_NAS.sh | bash
 ```
 
+***Info du disque**
+```bash
+synodisk --info /dev/sdq
+```
+
 ***Voire les logs du disque en question depuis le boot***
 ```bash
 dmesg -T | grep -i sdq
 ```
 OU
-
 ```bash
 dmesg -T | grep -i "error\|fail\|critical\|I/O\|sdq"
 ```
