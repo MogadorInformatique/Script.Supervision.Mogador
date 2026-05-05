@@ -17,7 +17,9 @@ dmesg -T | grep -i "error\|fail\|critical\|I/O\|sdq"
 
 
 
-##Glossaire des erreurs##
+
+
+##Glossaire des erreurs
 
 ***Erreurs matérielles disque (critiques)***
 - `I/O error, dev sdq, sector 2928550848`
