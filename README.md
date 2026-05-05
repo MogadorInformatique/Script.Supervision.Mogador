@@ -8,4 +8,9 @@ curl -sSfL https://raw.githubusercontent.com/MogadorInformatique/Script.Supervis
 ```bash
 dmesg -T | grep -i sdq
 ```
+OU
+
+```bash
+dmesg -T | grep -i "error\|fail\|critical\|I/O\|sdq"
+```
 À modifier en fonction de l’emplacement du disque (sdX ou sataX).
