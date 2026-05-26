@@ -3,6 +3,10 @@
 #!/bin/bash
 curl -sSfL https://raw.githubusercontent.com/MogadorInformatique/Script.Supervision.Mogador/main/DSM7_NAS.sh | bash
 ```
+***Hash du script de supervision***
+```bash
+63B72B67FD080AC040FD655CB9594A73C933F7446187B83EAFE0A96FC78A5E99
+```
 
 ***Info du disque**
 ```bash
