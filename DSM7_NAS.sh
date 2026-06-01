@@ -55,31 +55,6 @@ SUJET="Rapport DSM Synology - $(date '+%d/%m/%Y %H:%M')"
 FROM=$(grep 'smtp_from_mail' /usr/syno/etc/synosmtp.conf | cut -d '=' -f2 | tr -d '"')
 
 # -------------------------------
-# SYNCHRONISATION NTP
-# -------------------------------
-NTP_SERVER="pool.ntp.org"
-NTP_STATUS="Inconnu"
-
-if command -v ntpdate >/dev/null 2>&1; then
-    NTP_OUTPUT=$(ntpdate -u "$NTP_SERVER" 2>&1)
-    if [ $? -eq 0 ]; then
-        NTP_OFFSET=$(echo "$NTP_OUTPUT" | grep -oE 'offset [+-]?[0-9]+\.[0-9]+' | head -n1)
-        NTP_STATUS="Synchronisé (ntpdate) - offset : $NTP_OFFSET sec"
-    else
-        NTP_STATUS="Échec synchronisation (ntpdate) : $NTP_OUTPUT"
-    fi
-elif command -v sntp >/dev/null 2>&1; then
-    NTP_OUTPUT=$(sntp -S "$NTP_SERVER" 2>&1)
-    if [ $? -eq 0 ]; then
-        NTP_STATUS="Synchronisé (sntp)"
-    else
-        NTP_STATUS="Échec synchronisation (sntp) : $NTP_OUTPUT"
-    fi
-else
-    NTP_STATUS="Aucun client NTP disponible (ntpdate/sntp introuvable)"
-fi
-
-# -------------------------------
 # BACKUP
 # -------------------------------
 CONF_FILE="/usr/syno/etc/synobackup.conf"
@@ -229,8 +204,6 @@ Etat du serveur : $SERVER_STATUS
 
 Stockage        : utilise : $UTILISE / total : $TOTALE
 RAM utiliser    : $RAM_PERCENT %
-
-Synchro NTP     : $NTP_STATUS
 
 Backups         : $BACKUP_STATUS
 Détails :
